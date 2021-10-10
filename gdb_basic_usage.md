@@ -87,6 +87,8 @@ break func if a == 1
 - `display` 始终打印出某一变量或寄存器
   - `undisplay` 取消打印
 
+- `whatis` 检查类型
+
 
 
 ### 回放调试

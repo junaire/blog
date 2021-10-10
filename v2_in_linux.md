@@ -17,7 +17,12 @@ v2ray是一个强大的代理工具，但苦于Linux下一直没有一个好用�
 https://github.com/v2ray/v2ray-core/releases/
 ```
 
-解压后将相应的文件放置到对应的路径
+解压：
+```
+unzip v2ray-linux-64.zip -d v2ray-linux-64
+```
+
+解压后使用`mv`将相应的文件放置到对应的路径
 
 ```
 v2ray -> /usr/local/bin/v2ray
@@ -37,8 +42,10 @@ v2ray@.service -> /etc/systemd/system/v2ray@.service
 - 要在配置文件中指定日志路径
 
 
-
 ## 配置文件
+
+注意原生的V2ray并不支持订阅。
+
 以下配置文件仅为参考，你可以将其它客户端中的配置文件完全导出，然后直接替换`/usr/local/etc/v2ray/config.json`
 
 ```
@@ -153,6 +160,18 @@ v2ray@.service -> /etc/systemd/system/v2ray@.service
 }
 ```
 
+## 使用V2ray
+```
+# 启动V2ray
+sudo systemctl start v2ray
+
+# 检查V2ray状态
+sudo systemctl status v2ray
+
+# 设置V2ray开机自启动
+sudo systemctl enable v2ray
+```
+
 ## 检验代理是否成功生效
 
 终端下使用curl，查看它在代理模式下是否能返回数据：
@@ -162,6 +181,7 @@ curl -x socks5://127.0.0.1:10808 https://www.google.com -v
 如果能返回google.com的源代码，即表示配置成功。
 
 如果显示超时或者无法建立连接，即表示配置有错误，具体可以查看日志排查原因。
+
 ## 系统设置
 
 当我们配置好代理后，我们很多情况下并不能开箱即用，而是需要将代理信息写入相关配置文件后，才能使用。具体操作如下：
@@ -170,7 +190,7 @@ curl -x socks5://127.0.0.1:10808 https://www.google.com -v
 
 打开设置，选择网络->代理->手动 并填入相应端口
 
-此操作后可以使用浏览器测试是否能正常打开网页
+此操作后可以使用浏览器测试是否能正常打开网页,如果还是失败的话，考虑修改浏览器自带的代理配置。
 
 
 ### 将代理设置写入shell profile
@@ -182,7 +202,7 @@ curl -x socks5://127.0.0.1:10808 https://www.google.com -v
 如果不确定，就直接写入`~/.bashrc`
   ```
   //端口具体情况具体对待，不清楚打开代理工具看一下．
-  export ALL_PROXY="socks5://127.0.0.1:10808" 
+  export ALL_PROXY="socks5://127.0.0.1:10808"
   export http_proxy="http://127.0.0.1:10809"
   ```
 然后我们要让配置文件生效．
@@ -205,14 +225,16 @@ source ~/.bashrc
 ```
 proxychains wget https://example.com/index.html
 ```
-  
+
 ### `ssh`走`socks5`代理
 
 ```
 ssh -o "ProxyCommand=nc -X 5 -x 127.0.0.1:10808 %h %p" user@hostname
 ```
 其中端口按实际情况修改，
-如果想永久保持使用，可以使用`alias`做一个别名
+如果想永久保持使用，可以使用`alias`做一个别名。
+
+注意这里需要先安装`nc`
 
 ```
 alias pssh='ssh -o "ProxyCommand=nc -X 5 -x 127.0.0.1:10808 %h %p"'
