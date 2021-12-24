@@ -2,187 +2,170 @@
 title : "Git学习笔记"
 author : "Jun"
 date : "2021-02-28T15:38:15+08:00"
-categories : ["Linux"]
-tags : ["Linux"]
+categories : ["编程"]
+tags : ["Linux", "git"]
 ---
 
-## Git简介
+本文历经几次修改，主要是我对Git的一些学习和理解。其内容主要参考[Pro Git](https://git-scm.com/book/en/v2)。
+在经过几次重写后，我决定以问答和解释相结合的形式来总结与Git相关的知识点。
 
-## Git基本概念
-
-### 工作区
-
-工作区顾名思义是我们进行工作的地方，我们在其中对文件进行修改。所有未加入暂存区的文件都属于工作区。
-
-### 暂存区
-
-暂存区
-
-### 仓库
-
-仓库是Git中最重要的部分，
-
-
-## 基本操作
-
-### 创建Git仓库
-
-创建Git仓库主要有两种方式，一是从零开始创建一个新的仓库，二是获取一个已经存在的仓库。
-
-对于第一种方式，我们只要在任一目录下运行`git init`就可以了，Git会给我们以下提示：
-
+## git的基本工作模型
 ```
-Initialized empty Git repository in /path/to/repo/.git/
++--------------+      +--------------+      +----------+
+|              |      |              |      |          |
+| Working area | ===> | Staging area | ===> | Git repo |
+|              |      |              |      |          |
++--------------+      +--------------+      +----------+
 ```
 
-这就表示我们成功在`/path/to/repo/`目录下创建了一个仓库，其中所有Git保存的关键信息都在`.git`中，所以请勿在不确定的情况下修改或删除此目录！
+- **Working area** 所有被Git track过的文件都认为被放到这个区域。
+- **Staging area** 这里负责存放准备提交的文件。
+- **Git repo** 这里就是提交后的文件了。
 
-对于第二中方式，我们只要知道目标repo的地址，使用`git clone <url>`就可以了。比如我们尝试clone在github下的一个仓库：
-
+## git分支
 ```
-git clone https://github.com/torvalds/linux.git
-```
-这样我们就可以把linux内核的代码拉取到本地了。
-
-### 使用Git
-
-#### 提交内容到仓库
-
-假设我们现在已经创建了一个空的Git仓库，想要写一些东西。我们首先创建了一个文件叫`README.txt`。
-
-这个文件现在属于工作区，因为我们没有使用Git去记录它的修改历史。我们可以使用`git status`查看当前仓库的状态：
-
-```
-On branch master
-
-No commits yet
-
-Untracked files:
-  (use "git add <file>..." to include in what will be committed)
-        README.txt
-
-nothing added to commit but untracked files present (use "git add" to track)
-
++-----+    +-----+    +-----+ <---- master   HEAD
+|123a |<---|1e69 |<---|5adc | ^               |
++-----+    +-----+    +-----+ |_______________+
 ```
 
-Git会温馨地提示我们`README.txt`是Untracked files，可以使用`git add <file>`来加入暂存区。
+在Git中，分支可以认为是指向一个commit的指针，其中`HEAD`永远指向当前所在的commit。
 
-当我们使用`git add README.txt`后，再尝试使用`git status`，显示：
-```
-On branch master
+## 怎么将文件加入staging area?
+如果是提交单个文件, 可以使用`git add <filename>`，如果是提交多个文件，可以使用`git add .`或
+`git add *.c`等。如果想将一个文件中的多个修改分开提交，可以使用`git add -p`。
 
-No commits yet
+## 怎么将加入staging area的文件退回工作区？
+如果错误使用`git add .`将一些不想要的文件加入了staging area, 可以使用`git restore --staged <filename>`
+将文件退回工作区，并保留了更改。
 
-Changes to be committed:
-  (use "git rm --cached <file>..." to unstage)
-        new file:   README.txt
-
-```
-
-此时Git告诉我们，`README.txt`已经加入了暂存区，但是还没有提交到仓库中。
-
-`git add` 是可以处理多个文件的，比如`git add foo.cc bar.cc`，也可以使用`git add .`将所有文件一起加入暂存区。
-
-当我们我们准备好了，我们可以使用`git commit`将暂存区的所有文件提交到仓库了。之后Git会要求你写一个commit message来表明你此次提交内容的简介。你也可以使用`git commit -m "commit message here..."`来直接提交。
-
-举个例子，这里我们使用`git commit -m "add README.txt"`来提交我们的内容。此时，Git会显示：
-```
-[master (root-commit) 8612de5] add README.txt
- 1 file changed, 1 insertion(+)
- create mode 100644 README.txt
-
-```
-
-其中，`8612de5`是本次提交的hash值，未来我们可以通过它回退到这个提交。我们还可以使用`git show <hash>`来显示指定提交的内容。这里我们可以使用`git show`直接显示当前提交的内容。
-
-#### 修改提交
-
-##### 在工作区想要取消更改
-
-```
-git checkout -- <file>
-```
-
-##### 加入了暂存区，想要退到工作区
-
-```
-git restore --staged <file>
-```
-
-##### 已经提交了，想要删除此提交
-
-```
-git reset --hard HEAD^
-```
-
-##### 已经提交了，想要修改此提交
-
+## 怎么修改之前的commit？
+假如你对上一个commit不满意，比如少提交了文件，写错了commit message等，你可以：
 ```
 git commit --amend
 ```
-此时Git会要求你重新写commit message。如果你想在此提交中加入更多文件，请在此命令前使用`git add <file>`。
-它的本质是把之前的提交重新放回暂存区，使我们可以重新修改。
+### 那怎么修改非上一个commit呢？
 
-#### 查看变更内容
+## 怎么将放弃工作区的修改？
+对于处于工作区的修改，可以使用`git restore <filename>` 丢弃修改。
 
-##### 未暂存的
+**注意此操作不能撤销，修改的文件将直接丢失！**
 
+## 怎么查看git历史？
 ```
-git diff
-```
-此命令比较的是工作区文件与暂存区快照的区别
-
-##### 已暂存的
-
-```
-git diff --staged
+git log #默认的查看历史
+git log --pretty=oneline #以单行的形式查看历史
+git log --author="Jun Zhang" #搜索指定作者的commits
 ```
 
-此命令比较的是暂存区内容与上一次提交的区别。
-
-#### 查看提交历史
-
+## 如何将多个commits合并成一个？
+假设我们有git历史如下：
 ```
-git log
-```
+commit 4ab5de2355dc7f910ed39d1b71052fc1d30a0da3 (HEAD -> master)
+Author: Jun Zhang <jun@junz.org>
+Date:   Fri Dec 24 22:27:02 2021 +0800
 
-## 使用远程库 
+    finally fix up
 
-## Git分支
+commit 2d187de6e426e754084663a1710de9fd7a87c871
+Author: Jun Zhang <jun@junz.org>
+Date:   Fri Dec 24 22:26:25 2021 +0800
 
-在此之前，我们对Git的所有操作都是在一个分支，即master分支上进行的。这在单人开发下问题不大，但如果我们是多人协作时，可能会遇到以下问题：
-- q1
-- q1
-- q2
+    another fix up
 
-### 创建分支
+commit ca0fe9c9c1f116cf83905aaacc0736359af3fb7e
+Author: Jun Zhang <jun@junz.org>
+Date:   Fri Dec 24 22:26:03 2021 +0800
 
-```
-git checkout -b <branch-name>
-```
+    fix up
 
-这会创建一个新的分支并切入此分支。
+commit 418809d837801cc8b2816567b373747599730736
+Author: Jun Zhang <jun@junz.org>
+Date:   Fri Dec 24 22:25:41 2021 +0800
 
-### 列出全部分支
-
-```
-git branch
+    Initial commit
 ```
 
-### 删除分支
-
+我们想把前三个commit合并成一个，因为他们是相关联的。我们可以这么做：
 ```
-git branch -D <branch-name>
-```
-
-### 合并分支
-
-```
-git merge <branch-name>
+git rebase -i HEAD~3
 ```
 
-这会把指定分支合并到当前分支上，一般是master
+git会展示如下内容：
+```
+pick ca0fe9c fix up
+pick 2d187de another fix up
+pick 4ab5de2 finally fix up
+# Rebase 418809d..4ab5de2 onto 418809d (3 commands)
+```
+可以看到这里的历史与git log展示的历史顺序刚好相反。我们要把下面两个后来的commits
+合并到之前的那一个上，我们可以：
 
-#### 冲突
+```
+pick ca0fe9c fix up
+squash 2d187de another fix up
+squash 4ab5de2 finally fix up
+```
+保存后git便会要求我们重写git commit messge，此后使用git log可以看到3个commits被合并成了一个。
+```
+commit fedae1c1c4265c314166729c16a2855dfddc1f3c (HEAD -> master)
+Author: Jun Zhang <jun@junz.org>
+Date:   Fri Dec 24 22:26:03 2021 +0800
 
+    squash 3 commits into one.
 
+commit 418809d837801cc8b2816567b373747599730736
+Author: Jun Zhang <jun@junz.org>
+Date:   Fri Dec 24 22:25:41 2021 +0800
+
+    Initial commit
+```
+
+## 怎么在切换分支的时候暂时保存工作进度？
+有时候在一个分支还没有工作完，我们并不想commit，但是因为一些原因我们又需要切一个新的分支，
+这时候便可以使用`git stash`这个命令。
+
+比如我们现在在分支`dev`上，我们有一些在staging area的文件，而我们并不想立刻commit。我们可以
+使用`git stash`暂存更改。`git stash`会把更改放到一个栈型的结构中，后面我们可以继续使用`git stash`
+暂存更改。
+
+使用`git stash list`来查看所有暂存的更改，据个例子：
+```
+stash@{0}: WIP on master: fedae1c squash 3 commits into one.
+stash@{1}: WIP on dev: fedae1c squash 3 commits into one.
+```
+我们分别在dev分支和master分支上使用了`git stash`，可以看到我们有两个暂存的更改。
+
+当我们准备好时，可以使用`git stash apply stash@{n}`来释放之前暂存的修改。如果直接使用`git stash apply`，
+会应用栈顶的那个更改。但是注意应用后在栈中存放的更改并不会丢失，而是继续存放在那除非手动使用`git stash drop stash@{n}`。
+也可以使用`git stash pop`应用栈顶的那个更改并自动将其`drop`掉。
+
+## 怎么合并分支？
+合并分支有两种策略，一种是默认的`git merge`，另一种是`git rebase`。
+```
+                      +-----+
+              +-------|9e7d |(dev)
+              |       +-----+
+             \/
++-----+    +-----+    +-----+
+|123a |<---|1e69 |<---|5adc |(master)
++-----+    +-----+    +-----+
+```
+
+对于merge来说，其工作原理是由其公共commit后diff创建一个新的commit。即它会合并`9e7d`和`5adc`，并
+加到`5adc`上。
+
+而对于rebase来说，其工作原理是将新的commit移动到其他分支上，像是改变了其parent。
+```
+git checkout -b dev
+# make some changes
+git rebase master
+git checkout master
+git merge dev
+```
+如果说在开发过程中远程master分支有了新的commit，如上图的`5adc`，我们应该先：
+```
+git checkout master
+git pull
+```
+在此之后再使用`rebase`。
