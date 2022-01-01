@@ -31,14 +31,12 @@ git clone --depth=1 https://github.com/llvm/llvm-project.git
 
 ### 构建工具
 
-因为LLVM是使用C++14标准写的（可能还会转向C++17），所以我们要保证我们的编译器支持其标准，以及有其它配套的构建工具：
+因为LLVM是使用C++14标准写的（实际上使用了很多C++17特性），所以我们要保证我们的编译器支持其标准，以及有其它配套的构建工具：
 - ninja
 - cmake
 - gcc/clang/MSVC
 - ccache
 - gold
-
-
 
 
 ```bash
@@ -47,13 +45,13 @@ mkdir build && cd build
 ```
 
 ```bash
-cmake -DCMAKE_BUILD_TYPE=Debug \
-      -DLLVM_TARGETS_TO_BUILD=X86\
-	  -DLLVM_USE_LINKER=gold    \
-      -DBUILD_SHARED_LIBS=ON   \
-      -DLLVM_CCACHE_BUILD=ON   \
-	 -DLLVM_APPEND_VC_REV=OFF  \
-	-DLLVM_ENABLE_PROJECTS="clang; clang-tools-extra" \
+cmake -DCMAKE_BUILD_TYPE=Release  \
+      -DLLVM_TARGETS_TO_BUILD=X86 \
+	  -DLLVM_USE_LINKER=gold      \
+      -DBUILD_SHARED_LIBS=ON      \
+      -DLLVM_CCACHE_BUILD=ON      \
+	  -DLLVM_APPEND_VC_REV=OFF     \
+	  -DLLVM_ENABLE_PROJECTS="clang;clang-tools-extra" \
       -G"Ninja" ../llvm
 ```
 
@@ -68,12 +66,9 @@ cmake -DCMAKE_BUILD_TYPE=Debug \
 - `LLVM_ENABLE_PROJECTS`可以选择启用的子项目，我们这里只编译`clang`和`clang-tools-extra`。
 
 
-
 ```bash
 ninja
 ```
-
-
 
 ## 提交代码
 
@@ -98,7 +93,7 @@ export PATH="$PATH:/somewhere/arcanist/bin/"
 arc install-certificate
 ```
 
-可以使用`git commit --amend`将多个提交压缩成一个，从而以patch的形式发出去。
+在写代码的时候可以使用`git commit --amend`将多个提交压缩成一个，从而以patch的形式发出去。
 举个例子：
 ```bash
 git checkout -b patch
@@ -116,7 +111,6 @@ patch符合LLVM Coding Style。
 可以直接将[git-clang-format](https://github.com/llvm/llvm-project/blob/main/clang/tools/clang-format/git-clang-format)复制一份到PATH所在的路径中就可以了，比如`/usr/local/bin`。
 
 
-
 ```bash
 git clang-format HEAD~1
 ```
@@ -125,8 +119,6 @@ git clang-format HEAD~1
 ```bash
 git commit --amend -a
 ```
-
-
 
 ### 寻找Reviewer
 
@@ -145,7 +137,6 @@ arc diff --reviewers=account1,account2
 一个链接，这便是我们的Revision啦。
 
 
-
 ### 更新patch
 
 再Reviewer看过代码后，可能会给我们一些修改的建议，我们可以继续使用arcanist更新我们的patch:
@@ -159,8 +150,6 @@ git commit --amend -a
 arc diff `git merge-base HEAD origin` --update DXXXXX
 ```
 
-
-
 ## 社区支持
 
 LLVM有一个非常活跃，非常热情的社区。如果遇到了任何问题，完全可以寻找社区的帮助，那里有大量的志愿者非常乐意回答你的问题。当然，和所有成熟的开源项目一样，LLVM有着非常丰富的文档，善于从文档中寻找解决答案也是一项重要的技能。
@@ -169,3 +158,5 @@ LLVM有一个非常活跃，非常热情的社区。如果遇到了任何问题�
 - [IRC](irc://irc.oftc.net/llvm)
 - [Discourse](https://llvm.discourse.group/)
 - [Discord](https://discord.gg/xS7Z362)
+
+Happy Hacking :^)
