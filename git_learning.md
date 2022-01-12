@@ -39,12 +39,48 @@ tags : ["Linux", "git"]
 如果错误使用`git add .`将一些不想要的文件加入了staging area, 可以使用`git restore --staged <filename>`
 将文件退回工作区，并保留了更改。
 
+## 怎么撤销当前的提交并保留修改？
+假如我们刚写好一个patch并想要写下一个，但是忘记切回主分支而是直接切了一个新分支，这就导致了新分支的base branch错了。我们可以先撤销掉当前的提交：
+```
+git reset HEAD^
+```
+接着我们再切一个新的分支提交就好了：
+```
+git checkout -b new-branch
+git commit -a
+```
+
 ## 怎么修改之前的commit？
 假如你对上一个commit不满意，比如少提交了文件，写错了commit message等，你可以：
 ```
 git commit --amend
 ```
 ### 那怎么修改非上一个commit呢？
+如果你想修改非上一个commit的话，就需要使用rebase了。
+
+假设我们有如下的git历史：
+```
++----------+
+| commit 3 |
++----------+
+     ||
+	 \/
++----------+
+| commit 2 |
++----------+
+     ||
+	 \/
++----------+
+| commit 1 |
++----------+
+```
+我们想修改`commit 2`的提交信息的话，可以：
+```
+git rebase -i HEAD~3
+```
+接着找到我们想修改的提交，将其`pick`改成`edit`，并保存退出。
+
+这时候我们就可以使用`git commit --amend`来修改了，最后`git rebase --continue`就可以了。
 
 ## 怎么将放弃工作区的修改？
 对于处于工作区的修改，可以使用`git restore <filename>` 丢弃修改。
