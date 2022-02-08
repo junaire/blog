@@ -70,16 +70,34 @@ C程序可以用syscall函数实现任何系统调用。
 #include <sys/types.h>
 #include <sys/wait.h>
 
-pid_t waitpid(pid_t pid, int *startup, int options);
+pid_t waitpid(pid_t pid, int *stausp, int options);
 ```
 
 - 等待的子进程由`pid`决定。它可以是某个确定的子进程，也可以为-1，表示等待所有子进程。
-- 行为可以由`options`决定。通过将它设置为下面的一个常量改变默认行为：
+- 行为可以由`options`决定。通过将它设置为下面的一个常量或几个量的组合改变默认行为：
   - `WNOHANG`如果等待中的任何子进程都还没有终止，立即返回。返回值为0。
   - `WUNTRACED`返回的`pid`为导致返回的已终止或**被停止**的子进程。
   - `WCONTINUED`挂起父进程的执行，直到等待中的一个正在运行的进程终止或收到`SIGCONT`信号重新执行。
 
 默认返回值导致返回的已终止的子进程。如果父进程没有子进程，那么返回值为-1，并且将errno设置为`ECHILD`。如果被信号中断，那么返回值为-1，并且将errno设置为`EINTER`。
+
+当`statusp`不为空时，那么`waitpid`会在其中放上导致退出的原因，可以用以下宏检查：
+- `WIFEXITED` 子进程通过调用`exit`或者正常return终止。
+-  `WIFSTOPPED` 子进程当前是停止的。
+-  `WCONTINUED` 子进程收到`SIGCONT`重新启动。
+举个具体的使用例子：
+```c
+pid_t pid;
+int status;
+while(pid = waitpid(-1, &status, WNOHANG | WUNTRACED | WCONTINUED) > 0){
+    if (WIFEXITED(status))
+        printf("child normally exited\n");
+    else if (WIFSTOPPED(status))
+        printf("child has been interrupted\n");
+    else if (WCONTINUED(status))
+        printf("child received SIGCONT\n");
+}
+```
 
 ### 加载运行程序
 我们可以使`execve`函数在当前进程的上下文加载并运行一个新程序。它的原型为：
@@ -141,3 +159,13 @@ sighandler_t signal(int signum, sighandler_t handler);
 Linux提供了两种信号阻塞机制：
 - 隐式阻塞。内核默认阻塞任何当前处理程序正在处理信号类型的待处理信号。
 - 显式阻塞。使用`sigprocmask`函数明确地阻塞信号。
+举个简单的例子如何阻塞一个信号：
+```c
+sigset_t mask, prev;
+
+sigemptyset(&mask); // set mask to empty
+sigaddset(&mask, SIGINT); // add SIGINT to mask
+sigprocmask(SIG_BLOCK, &mask, &prev); // block signals in mask, and save previous ones in prev
+// code here will not be interrupted by SIGINT
+sigprocmask(SIG_SETMASK, &prev, NULL); // roll back
+```
