@@ -70,7 +70,7 @@ C程序可以用syscall函数实现任何系统调用。
 #include <sys/types.h>
 #include <sys/wait.h>
 
-pid_t waitpid(pid_t pid, int *stausp, int options);
+pid_t waitpid(pid_t pid, int *statusp, int options);
 ```
 
 - 等待的子进程由`pid`决定。它可以是某个确定的子进程，也可以为-1，表示等待所有子进程。
@@ -85,6 +85,7 @@ pid_t waitpid(pid_t pid, int *stausp, int options);
 - `WIFEXITED` 子进程通过调用`exit`或者正常return终止。
 -  `WIFSTOPPED` 子进程当前是停止的。
 -  `WCONTINUED` 子进程收到`SIGCONT`重新启动。
+
 举个具体的使用例子：
 ```c
 pid_t pid;
@@ -159,6 +160,7 @@ sighandler_t signal(int signum, sighandler_t handler);
 Linux提供了两种信号阻塞机制：
 - 隐式阻塞。内核默认阻塞任何当前处理程序正在处理信号类型的待处理信号。
 - 显式阻塞。使用`sigprocmask`函数明确地阻塞信号。
+
 举个简单的例子如何阻塞一个信号：
 ```c
 sigset_t mask, prev;
